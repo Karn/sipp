@@ -79,6 +79,8 @@ struct KeywordMap SimpleKeywords[] = {
     {"next_url", E_Message_Next_Url },
     {"len", E_Message_Len },
     {"peer_tag_param", E_Message_Peer_Tag_Param },
+    {"from_tag_param", E_Message_From_Tag_Param },
+    {"to_tag_param", E_Message_To_Tag_Param },
     {"last_Request_URI", E_Message_Last_Request_URI },
     {"last_cseq_number", E_Message_Last_CSeq_Number },
     {"last_message", E_Message_Last_Message },

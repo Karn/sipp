@@ -75,15 +75,20 @@ static const char* internal_hdrend(const char* ptr);
 
 char* get_peer_tag(const char* msg)
 {
+    return get_tag(msg, "To", "t");
+}
+
+char* get_tag(const char* msg, const char* direction, const char* direction_short)
+{
     static char   tag[MAX_HEADER_LEN];
-    const char  * to_hdr;
+    const char  * direction_hdr;
     const char  * ptr;
     int           tag_i = 0;
 
     /* Find start of header */
-    to_hdr = internal_find_header(msg, "To", "t", true);
-    if (!to_hdr) {
-        WARNING("No valid To: header in reply");
+    direction_hdr = internal_find_header(msg, direction, direction_short, true);
+    if (!direction_hdr) {
+        WARNING("No valid direction header in reply");
         return NULL;
     }
 
@@ -91,10 +96,10 @@ char* get_peer_tag(const char* msg)
     /* FIXME */
 
     /* Skip past LA/RA-quoted addr-spec if any */
-    ptr = internal_hdrchr(to_hdr, '>');
+    ptr = internal_hdrchr(direction_hdr, '>');
     if (!ptr) {
         /* Maybe an addr-spec without quotes */
-        ptr = to_hdr;
+        ptr = direction_hdr;
     }
 
     /* Find tag in this header */
@@ -715,6 +720,16 @@ TEST(Parser, get_call_id_1) {
     EXPECT_STREQ("test1", get_call_id("...\r\nCall-ID: test1\r\n\r\n"));
 }
 
+TEST(Parser, get_tag__normal) {
+    EXPECT_STREQ("normal1", get_tag("...\r\nFrom: <abc>;t2=x;tag=normal1;t3=y\r\n\r\n", "From", "f"));
+    EXPECT_STREQ("normal2", get_tag("...\r\nTo: <abc>;t2=x;tag=normal2;t3=y\r\n\r\n", "To", "f"));
+}
+
+TEST(Parser, get_tag_compact__normal) {
+    EXPECT_STREQ("normal1", get_tag("...\r\nf: <abc>;t2=x;tag=normal1;t3=y\r\n\r\n", "From", "f"));
+    EXPECT_STREQ("normal2", get_tag("...\r\nt: <abc>;t2=x;tag=normal2;t3=y\r\n\r\n", "To", "t"));
+}
+
 TEST(Parser, get_call_id_2) {
     EXPECT_STREQ("test2", get_call_id("...\r\nCALL-ID:\r\n test2\r\n\r\n"));
 }
@@ -735,6 +750,8 @@ TEST(Parser, get_call_id_short_2) {
 
 TEST(Parser, get_short_header_via) {
     EXPECT_STREQ("v:", get_compact_header_name("Via:"));
+
+    EXPECT_STREQ("f:", get_compact_header_name("From:"));
 
     EXPECT_STREQ("m:", get_compact_header_name("Contact:"));
 }
