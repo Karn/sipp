@@ -190,11 +190,13 @@ protected:
     bool           *rtd_done;
 
     char           *peer_tag;
+    char           *from_tag;
+    char           *to_tag;
 
     SIPpSocket *call_remote_socket;
     int            call_port;
 
-    void         * comp_state;
+    void           *comp_state;
 
     int            deleted;
 

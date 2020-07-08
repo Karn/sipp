@@ -518,6 +518,8 @@ void call::init(scenario * call_scenario, SIPpSocket *socket, struct sockaddr_st
 #endif
 
     peer_tag = NULL;
+    from_tag = NULL;
+    to_tag = NULL;
     recv_timeout = 0;
     send_timeout = 0;
     timewait = false;
@@ -615,8 +617,15 @@ call::~call()
     if (last_send_msg) {
         free(last_send_msg);
     }
+
     if (peer_tag) {
         free(peer_tag);
+    }
+    if (from_tag) {
+        free(from_tag);
+    }
+    if (to_tag) {
+        free(to_tag);
     }
 
     if (dialog_route_set) {
@@ -2123,6 +2132,16 @@ char* call::createSendingMessage(SendingMessage *src, int P_index, char *msg_buf
                 dest += snprintf(dest, left, ";tag=%s", peer_tag);
             }
             break;
+        case E_Message_From_Tag_Param:
+            if(from_tag) {
+                dest += snprintf(dest, left, ";tag=%s", from_tag);
+            }
+            break;
+        case E_Message_To_Tag_Param:
+            if(to_tag) {
+                dest += snprintf(dest, left, ";tag=%s", to_tag);
+            }
+            break;
         case E_Message_Routes:
             if (dialog_route_set) {
                 dest += sprintf(dest, "Route: %s", dialog_route_set);
@@ -2828,6 +2847,34 @@ bool call::process_incoming(const char* msg, const struct sockaddr_storage* src)
         }
     }
 #endif
+
+    /* To and from tag */
+    ptr = get_tag(msg, "To", "t");
+    if (ptr) {
+        if(strlen(ptr) > (MAX_HEADER_LEN - 1)) {
+            ERROR("To tag too long. Change MAX_HEADER_LEN and recompile sipp");
+        }
+        if(to_tag) {
+            free(to_tag);
+        }
+        to_tag = strdup(ptr);
+        if (!to_tag) {
+            ERROR("Out of memory allocating To tag.");
+        }
+    }
+    ptr = get_tag(msg, "From", "f");
+    if (ptr) {
+        if(strlen(ptr) > (MAX_HEADER_LEN - 1)) {
+            ERROR("From tag too long. Change MAX_HEADER_LEN and recompile sipp");
+        }
+        if(from_tag) {
+            free(from_tag);
+        }
+        from_tag = strdup(ptr);
+        if (!from_tag) {
+            ERROR("Out of memory allocating From tag.");
+        }
+    }
 
     /* Is it a response ? */
     if ((msg[0] == 'S') &&

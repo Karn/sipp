@@ -28,6 +28,7 @@
 
 char *get_call_id(const char* msg);
 char *get_peer_tag(const char* msg);
+char *get_tag(const char* msg, const char* direction, const char* direction_short);
 
 int get_method(char *msg);
 unsigned long int get_cseq_value(const char* msg);
